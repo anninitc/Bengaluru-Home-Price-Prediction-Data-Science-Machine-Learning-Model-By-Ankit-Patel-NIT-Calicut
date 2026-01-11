@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bangalore Home Price Prediction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+            background-size: cover;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 48px;
+            max-width: 550px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 32px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fff;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+
+        .radio-group label {
+            flex: 1;
+            min-width: 60px;
+            padding: 12px 20px;
+            text-align: center;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+            text-transform: none;
+            letter-spacing: normal;
+            margin: 0;
+        }
+
+        .radio-group label:hover {
+            background: #ebebeb;
+            border-color: #d0d0d0;
+        }
+
+        .radio-group input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .btn-estimate {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-estimate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-estimate:active {
+            transform: translateY(0);
+        }
+
+        .btn-estimate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 32px;
+            padding: 24px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.4s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .result h2 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .result p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            margin-top: 32px;
+            padding: 16px;
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 12px;
+            color: #c33;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            padding-right: 45px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .radio-group label {
+                min-width: 50px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Home Price Predictor</h1>
+            <p>Get instant estimates for Bangalore properties</p>
+        </div>
+
+        <form id="priceForm" onsubmit="return false;">
+            <div class="form-group">
+                <label for="sqft">Area (Square Feet)</label>
+                <input 
+                    type="number" 
+                    id="sqft" 
+                    placeholder="e.g., 1000" 
+                    min="100" 
+                    max="50000"
+                    value="1000"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Bedrooms (BHK)</label>
+                <div class="radio-group">
+                    <input type="radio" id="bhk1" name="bhk" value="1">
+                    <label for="bhk1">1</label>
+                    
+                    <input type="radio" id="bhk2" name="bhk" value="2" checked>
+                    <label for="bhk2">2</label>
+                    
+                    <input type="radio" id="bhk3" name="bhk" value="3">
+                    <label for="bhk3">3</label>
+                    
+                    <input type="radio" id="bhk4" name="bhk" value="4">
+                    <label for="bhk4">4</label>
+                    
+                    <input type="radio" id="bhk5" name="bhk" value="5">
+                    <label for="bhk5">5</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Bathrooms</label>
+                <div class="radio-group">
+                    <input type="radio" id="bath1" name="bath" value="1">
+                    <label for="bath1">1</label>
+                    
+                    <input type="radio" id="bath2" name="bath" value="2" checked>
+                    <label for="bath2">2</label>
+                    
+                    <input type="radio" id="bath3" name="bath" value="3">
+                    <label for="bath3">3</label>
+                    
+                    <input type="radio" id="bath4" name="bath" value="4">
+                    <label for="bath4">4</label>
+                    
+                    <input type="radio" id="bath5" name="bath" value="5">
+                    <label for="bath5">5</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Location</label>
+                <select id="location" required>
+                    <option value="" disabled selected>Choose a location...</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn-estimate" onclick="estimatePrice()">
+                Estimate Price
+            </button>
+
+            <div id="result" class="result">
+                <h2 id="resultPrice">--</h2>
+                <p>Estimated Price</p>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        let locations = [];
+
+        // Load locations on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/get_location_names');
+                const data = await response.json();
+                
+                if (data && data.locations) {
+                    locations = data.locations;
+                    const locationSelect = document.getElementById('location');
+                    
+                    locations.forEach(loc => {
+                        const option = document.createElement('option');
+                        option.value = loc;
+                        option.textContent = loc;
+                        locationSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading locations:', error);
+                showError('Unable to load locations. Please check if the server is running.');
+            }
+        });
+
+        // Get selected radio value
+        function getRadioValue(name) {
+            const radios = document.getElementsByName(name);
+            for (let radio of radios) {
+                if (radio.checked) {
+                    return parseInt(radio.value);
+                }
+            }
+            return null;
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Estimate price
+        async function estimatePrice() {
+            const sqft = document.getElementById('sqft').value;
+            const bhk = getRadioValue('bhk');
+            const bath = getRadioValue('bath');
+            const location = document.getElementById('location').value;
+            const resultDiv = document.getElementById('result');
+            const resultPrice = document.getElementById('resultPrice');
+            const btn = document.querySelector('.btn-estimate');
+
+            // Validation
+            if (!sqft || sqft < 100) {
+                showError('Please enter a valid square footage (minimum 100)');
+                return;
+            }
+
+            if (!location) {
+                showError('Please select a location');
+                return;
+            }
+
+            // Show loading state
+            btn.disabled = true;
+            btn.innerHTML = 'Calculating<span class="loading"></span>';
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict_home_price', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        total_sqft: parseFloat(sqft),
+                        bhk: bhk,
+                        bath: bath,
+                        location: location
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data && data.estimated_price) {
+                    resultPrice.textContent = `₹${data.estimated_price} Lakh`;
+                    resultDiv.classList.add('show');
+                } else {
+                    showError('Unable to calculate price. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error estimating price:', error);
+                showError('Server error. Please ensure the backend is running on http://127.0.0.1:5000');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Estimate Price';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('sqft').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                estimatePrice();
+            }
+        });
+    </script>
+</body>
+</html>
